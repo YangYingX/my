@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="./axios.js"></script>
+  <script src="./jquery.min.js"></script>
+  <title>Document</title>
+  <style>
+    select {
+      width: 260px;
+      height: 40px;
+      font-size: 24px;
+    }
+
+    button {
+      width: 260px;
+      height: 40px;
+      font-size: 24px;
+    }
+
+    .weatherarea {
+      width: 400px;
+      height: 400px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <select name="" id="province">
+
+  </select>
+
+  <select name="" id="city">
+
+  </select>
+  <select name="" id="region">
+
+  </select>
+  <button>查询</button>
+  <div class="weatherarea">
+    <p class="cityname"></p>
+    <p class="date"></p>
+    <p class="time"></p>
+    <p class="weather"></p>
+    <p class="tem"></p>
+
+  </div>
+  <script>
+    $(function () {
+      axios({
+        url: 'http://127.0.0.1:2000/china/province'
+      }).then((result) => {
+
+        const { config, data: { province } } = result
+        province.forEach(element => {
+          let ne = $(`<option value="">${element}</option>`)
+          $('#province').append(ne)
+        });
+        changecity()
+
+      }).catch((err) => {
+
+      });
+
+      $('#province').on('change', function (params) {
+        changecity()
+
+      })
+      $('#city').on('change', function (params) {
+        changeregion()
+      })
+
+      $('button').on('click', function (params) {
+        const city = $('#city option:selected').text()
+        var city1 = city.replace(/省|市|自治区|特别行政区|壮族|回族|维吾尔|盟/g, "");
+        axios({
+          url: 'http://127.0.0.1:2000/weather',
+          params: {
+            city: city1
+          }
+        }).then((result) => {
+          console.log(result);
+          const { config, data: { code, data: { cityInfo, day, night, now } } } = result
+          $('.cityname').html(now.cityname)
+          $('.date').html(now.date)
+          $('.time').html(now.time)
+          $('.weather').html(now.weather)
+          $('.tem').html(now.temp)
+        }).catch((err) => {
+
+        });
+      })
+
+
+
+      function changecity(params) {
+        const province = $('#province option:selected').text()
+        console.log($('#province option:selected').text());
+        axios({
+          url: 'http://127.0.0.1:2000/china/city',
+          params: {
+            province: province
+          }
+        }).then((result) => {
+          const { config, data: { citys } } = result
+          $('#city').children().remove()
+
+          citys.forEach(element => {
+            let ne = $(`<option value="">${element}</option>`)
+            $('#city').append(ne)
+
+            const city = $('#city').children().eq(0).text()
+            axios({
+              url: 'http://127.0.0.1:2000/china/region',
+              params: {
+                city
+              }
+            }).then((result) => {
+
+              const { config, data: { regions } } = result
+              $('#region').children().remove()
+
+              regions.forEach(element => {
+                let ne = $(`<option value="">${element}</option>`)
+                $('#region').append(ne)
+              });
+            }).catch((err) => {
+
+            });
+
+
+
+          });
+        }).catch((err) => {
+
+        });
+      }
+
+      function changeregion(params) {
+        const city = $('#city option:selected').text()
+        axios({
+          url: 'http://127.0.0.1:2000/china/region',
+          params: {
+            city
+          }
+        }).then((result) => {
+
+          const { config, data: { regions } } = result
+          $('#region').children().remove()
+
+          regions.forEach(element => {
+            let ne = $(`<option value="">${element}</option>`)
+            $('#region').append(ne)
+          });
+        }).catch((err) => {
+
+        });
+
+      }
+
+
+
+
+
+
+    })
+
+  </script>
+</body>
+
+</html>
